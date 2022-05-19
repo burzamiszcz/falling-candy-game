@@ -2,6 +2,10 @@ import pygame, sys
 import numpy as np
 import os
 from win32api import GetSystemMetrics
+import random
+import requests
+from datetime import datetime
+
 
 def resource_path0(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -16,6 +20,9 @@ def resource_path0(relative_path):
 #rozdzielczosc ekranu
 screen_width, screen_height = GetSystemMetrics(0), GetSystemMetrics(1)
 
+
+
+
 pygame.init()
 pygame.display.set_caption('DRUG GAME')
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -25,6 +32,14 @@ clock = pygame.time.Clock()
 gameover = pygame.mixer.Sound(resource_path0('data\\gameover.wav'))
 getib = pygame.mixer.Sound(resource_path0('data\\getib.wav'))
 lostib = pygame.mixer.Sound(resource_path0('data\\lostib.wav'))
+background1 = pygame.mixer.Sound(resource_path0('data\\background1.wav'))
+background2 = pygame.mixer.Sound(resource_path0('data\\background2.mp3'))
+background3 = pygame.mixer.Sound(resource_path0('data\\background3.mp3'))
+background4 = pygame.mixer.Sound(resource_path0('data\\background4.mp3'))
+background = [background1, background2, background3, background4]
+
+background[np.random.randint(1,4)].play(-1)
+
 
 
 #grafiki
@@ -122,10 +137,13 @@ class drug_c:
         self.spin_speed = np.random.randint(1,3) + np.random.random()
         self.surface = pygame.transform.rotate(self.image, self.angle)
         self.falling_speed = np.random.randint(0,1) + np.random.random()
+        self.direction = random.choice([-1, 1])
+        self.x_angle = np.random.randint(0,10)
 
 #wyświetlanie drugów
 def drug_blitz():
     global score, lifes
+
     for drug in drugs:
         drug_rect = drug.surface.get_rect(center = (drug.d_x_pos, drug.d_y_pos))
         drug.angle += drug.spin_speed
@@ -142,6 +160,13 @@ def drug_blitz():
             drugs.remove(drug)
             continue
         drug.d_y_pos += (1.2 + 0.03 * time * 2) + drug.falling_speed
+        if score > next_level_points:
+            if drug.d_x_pos > screen_width:
+                drug.direction = -1
+            if drug.d_x_pos < 0:
+                drug.direction = 1
+            drug.d_x_pos += drug.x_angle * drug.direction
+            
 
 def drug_spawn(chance):
     if chance <= 0.1:
@@ -156,6 +181,10 @@ time = 0
 tick = 0
 gameover_data = 0
 is_game_stared = 0
+direction = 1
+next_level_points = 30
+
+
 
 while True:
     tick += 1
@@ -175,7 +204,6 @@ while True:
             sys.exit()
     
     if tick % 12 == 0 and is_game_stared == 1 and gameover_data == 0:
-        print('spawn')
         drug_spawn(np.random.random() - 0.005 * score)
 
     #wyświetlanie tła
@@ -189,6 +217,9 @@ while True:
         #gra bez zyć
         else:
             if gameover_data == 0:
+                now = datetime.now()
+                dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+                requests.post("http://localhost:5000/game", json = {'score': score, 'date': dt_string})
                 gameover.play()
                 gameover_data = 1
             gameover_display()
