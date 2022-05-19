@@ -24,7 +24,7 @@ def game():
         cur.execute("SELECT * FROM game ORDER BY score DESC LIMIT 10")
         scores = cur.fetchall()
         print(scores)
-        return {'scores': scores}
+        return render_template('index.html', scores = scores)
 
 if __name__ == '__main__':
     app.run()
