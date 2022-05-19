@@ -55,7 +55,20 @@ for i in range(10):
     drugs_list.append(drug_to_list)
 
     #postać
-player_surface = pygame.image.load(resource_path0('data\\assets\\player.png')).convert_alpha()
+
+class player:
+    def __init__(self):
+        self.sprites = [pygame.transform.scale(pygame.image.load(resource_path0(f'data\\assets\\player_sprite\\{i + 1}.png')).convert_alpha(), (150, 150)) for i in range(10)]
+        self.current_sprite = 0
+    
+    def update(self):
+        self.current_sprite += 0.1
+        if self.current_sprite > 10:
+            self.current_sprite = 0
+
+first_player = player()
+player_surface = pygame.image.load(resource_path0('data\\assets\\player_sprite\\1.png')).convert_alpha()
+
 player_surface = pygame.transform.scale(player_surface, (150, 150))
     #postać koniec gry
 playerdead_surface = pygame.image.load(resource_path0('data\\assets\\player.png')).convert_alpha()
@@ -139,6 +152,7 @@ class drug_c:
         self.falling_speed = np.random.randint(0,1) + np.random.random()
         self.direction = random.choice([-1, 1])
         self.x_angle = np.random.randint(0,10)
+
 
 #wyświetlanie drugów
 def drug_blitz():
@@ -231,13 +245,16 @@ while True:
             
         #wyswietlanie playera
         if gameover_data == 0:
-            player_rect = player_surface.get_rect(midbottom = (mx, screen_height))
-            screen.blit(player_surface, player_rect)
+            player_rect = first_player.sprites[int(first_player.current_sprite)].get_rect(midbottom = (mx, screen_height))
+            screen.blit(first_player.sprites[int(first_player.current_sprite)], player_rect)
+            first_player.update()
 
         #martwa postać
         else:
-            playerdead_rect = playerdead_surface.get_rect(midbottom = (mx, screen_height))
-            screen.blit(playerdead_surface, playerdead_rect)
+            player_rect = first_player.sprites[int(first_player.current_sprite)].get_rect(midbottom = (mx, screen_height))
+            screen.blit(first_player.sprites[int(first_player.current_sprite)], player_rect)
+            first_player.update()
+
         score_display(score)
         # ib_pos_y += 1
         # screen.blit(ib_surface, (0, ib_pos_y))
