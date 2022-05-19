@@ -44,7 +44,7 @@ player_surface = pygame.image.load(resource_path0('data\\assets\\player.png')).c
 player_surface = pygame.transform.scale(player_surface, (150, 150))
     #postać koniec gry
 playerdead_surface = pygame.image.load(resource_path0('data\\assets\\player.png')).convert_alpha()
-playerdead_surface = pygame.transform.scale(playerdead_surface, (100, 110))
+playerdead_surface = pygame.transform.scale(playerdead_surface, (150, 150))
     #życia
 heart_surface = pygame.image.load(resource_path0('data\\assets\\heart.png')).convert_alpha()
 heart_surface = pygame.transform.scale(heart_surface, (50, 50))
@@ -61,11 +61,38 @@ def score_display(score):
 
 #ekran końcowy
 def gameover_display():
+    global drugs, score, lifes, gameover_data, is_game_stared, time
+
     gameover_surface = game_font.render('GAME OVER', True, (255, 255, 255))
     gameover_rect = gameover_surface.get_rect(center=(screen_width / 2, 300))
     screen.blit(gameover_surface, gameover_rect)
 
+    replay_surface = game_font.render('REPLAY?', True, (255, 255, 255))
+    replay_rect = replay_surface.get_rect(center=(screen_width / 2, 500))
+    if replay_rect.collidepoint(mx, my):
+        replay_surface = game_font.render('REPLAY?', True, (255, 0, 0))
+        if pygame.mouse.get_pressed()[0]:
+            drugs = []
+            score = 0
+            lifes = 3
+            gameover_data = 0
+            time = 0
+    screen.blit(replay_surface, replay_rect)
+
+    exit_game_surface = game_font.render('EXIT', True, (255, 255, 255))
+    exit_game_rect = exit_game_surface.get_rect(center=(screen_width/2, 700))
+    if exit_game_rect.collidepoint(mx, my):
+        exit_game_surface = game_font.render('EXIT', True, (255, 0, 0))
+        if pygame.mouse.get_pressed()[0]:
+            pygame.quit()
+            sys.exit()
+    screen.blit(exit_game_surface, exit_game_rect)
+
+
+    
+
 def start_menu(mx, my):
+    global is_game_stared
 
     start_game_surface = game_font.render('START', True, (255, 255, 255))
     exit_game_surface = game_font.render('EXIT', True, (255, 255, 255))
@@ -73,8 +100,17 @@ def start_menu(mx, my):
     exit_game_rect = exit_game_surface.get_rect(center=(screen_width/2, 500))
     if start_game_rect.collidepoint(mx, my):
         start_game_surface = game_font.render('START', True, (255, 0, 0))
+        if pygame.mouse.get_pressed()[0]:
+            is_game_stared = 1
+    if exit_game_rect.collidepoint(mx, my):
+        exit_game_surface = game_font.render('EXIT', True, (255, 0, 0))
+        if pygame.mouse.get_pressed()[0]:
+            pygame.quit()
+            sys.exit()
+
     screen.blit(start_game_surface, start_game_rect)
     screen.blit(exit_game_surface, exit_game_rect)
+
 
 
 class drug_c:
@@ -115,11 +151,11 @@ def drug_spawn(chance):
 #pomocnicze parametry
 drugs = []
 score = 0
-lifes = 10
+lifes = 3
 time = 0
 tick = 0
 gameover_data = 0
-is_game_stared = 1
+is_game_stared = 0
 
 while True:
     tick += 1
@@ -137,8 +173,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-
-    if tick % 12 == 0:
+    
+    if tick % 12 == 0 and is_game_stared == 1 and gameover_data == 0:
+        print('spawn')
         drug_spawn(np.random.random() - 0.005 * score)
 
     #wyświetlanie tła
@@ -151,10 +188,11 @@ while True:
 
         #gra bez zyć
         else:
-            gameover_display()
             if gameover_data == 0:
                 gameover.play()
                 gameover_data = 1
+            gameover_display()
+
 
         #wyświetlanie żyć
         for i in range(lifes):
@@ -167,7 +205,8 @@ while True:
 
         #martwa postać
         else:
-            screen.blit(playerdead_surface, (mx - 50, 700))
+            playerdead_rect = playerdead_surface.get_rect(midbottom = (mx, screen_height))
+            screen.blit(playerdead_surface, playerdead_rect)
         score_display(score)
         # ib_pos_y += 1
         # screen.blit(ib_surface, (0, ib_pos_y))
